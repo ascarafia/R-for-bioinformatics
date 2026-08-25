@@ -2,6 +2,8 @@
 
 Para aprender a usar este script, hay un [video tutorial](https://www.youtube.com/watch?v=TdzVxcGLVzU&t=37s) disponible. 
 
-Pueden hacerse este tipo de figuras 
-<img width="1905" height="1973" alt="Citometria_wildtype" src="https://github.com/user-attachments/assets/7094e3bd-5494-4c62-bf82-e2847b3791ab" />
-Imagen tomada de nuestro preprint en BioRxiv ([doi: 10.1101/2024.12.24.630259](https://www.biorxiv.org/content/10.1101/2024.12.24.630259v1))
+Pueden hacerse este tipo de figuras: 
+
+<img width="300" alt="Cytometry" src="https://github.com/user-attachments/assets/fc31f5df-5c23-4423-881f-703d61c937f7" />
+
+*Imagen tomada de nuestro preprint en BioRxiv ([doi: 10.1101/2024.12.24.630259](https://www.biorxiv.org/content/10.1101/2024.12.24.630259v1))*
