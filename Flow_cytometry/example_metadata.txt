@@ -1,0 +1,4 @@
+condition	file_name
+control	example_control.csv
+wildtype	example_wildtype.csv
+knockout	example_knockout.csv
