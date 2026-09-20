@@ -3,8 +3,10 @@
 
 suppressPackageStartupMessages({
   library(dplyr)
+  library(tidyr)
   library(ggplot2)
   library(scales)
+  library(rlang)
 })
 
 options(scipen = 999)
@@ -26,6 +28,43 @@ tidying_tables <- function(myfile, ch1, ch2, name1, name2){
   return(tidy_data)
 }
 
+classify_populations <- function(df, thresh1 = 100000, thresh2 = 100000, name1, name2) {
+  df %>% mutate(population = case_when(
+    df[,1] >= thresh1 & df[,2] >= thresh2 ~ paste0(!!name1,"+\n",!!name2,"+"),
+    df[,1] >= thresh1 & df[,2] <  thresh2 ~ paste0(!!name1,"+"),
+    df[,1] <  thresh1 & df[,2] >= thresh2 ~ paste0(!!name2,"+"),
+    TRUE ~ ""
+  )
+  )
+}
+
+build_labels <- function(df, name1, name2, x_range = c(100, 10000000), y_range = c(100, 10000000)) {
+  all_populations <- c(
+    paste0(name1, "+\n", name2, "+"),
+    paste0(name1, "+"),
+    paste0(name2, "+"),
+    ""
+  )
+  
+  summary_df <- df %>% group_by(condition) %>%
+    count(population) %>% ungroup() %>%
+    complete(condition, population = all_populations, fill = list(n = 0)) %>%
+    group_by(condition) %>%
+    mutate(percent = paste0(round(100 * n / sum(n), 1),"%")) %>% ungroup()
+  
+  positions <- tibble(
+    population = all_populations,
+    !!name1 := c(y_range[2], y_range[2], y_range[1], y_range[1]),
+    !!name2 := c(x_range[2], x_range[1], x_range[2], x_range[1]),
+    hjust    = c(1, 0, 1, 0),   
+    vjust    = c(1, 1, 0, 0))
+  
+  label_summary <- summary_df %>%
+    full_join(positions, by = "population")
+  
+  return(label_summary)
+}
+
 # - - - - Code to run from command line - - - - ---- 
 # Ignore this first section to run from R Studio
 args <- commandArgs(trailingOnly=TRUE)
@@ -37,22 +76,24 @@ name1 <- args[4]
 name2 <- args[5]
 
 # - - - - Code to run from within R - - - - ----
-# Uncomment to run from R Studio
+# Uncomment the code to run from R Studio
 
 # Seting the working directory 
 #work.space <- dirname(rstudioapi::getSourceEditorContext()$path)
 #setwd(work.space)
 
-#meta <- "name_of_metadata_file.txt"
+#meta_file <- "name_of_metadata_file.txt"
 #ch1 = "name of first channel"
-#name1 = "name of the first gene"
 #ch2 = "name of second channel"
+#name1 = "name of the first gene"
 #name2 = "name of the second gene"
 
 
-# - - - IMPORT DATA - - ----- 
+# - - - IMPORT AND PROCESS DATA - - ----- 
 
 data <- tidying_tables(meta_file, ch1, ch2, name1, name2)
+data <- classify_populations(data, thresh1 = 100000, thresh2 = 100000, name1, name2) 
+label <- build_labels(data, name1, name2)
 
 #---- THEME SET ----
 theme_set(theme_bw()+
@@ -73,12 +114,14 @@ pdf("cytometry_hexplot.pdf", height =4, width =10)
 
 ggplot(data, aes(.data[[name2]], .data[[name1]]))+
   facet_wrap(~condition)+
-  ggplot2::geom_hex(binwidth = 0.05, alpha = 0.9)+
+  geom_hex(binwidth = 0.05, alpha = 0.9)+
   guides(fill = guide_colourbar(barwidth = 0.7, barheight = 15))+
   scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
   scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
   scale_color_gradientn(colors = my_pal) +
   scale_fill_gradientn(colors = my_pal) +
+  geom_text(data = label, aes(x = .data[[name2]], y = .data[[name1]], hjust = hjust, vjust = vjust,
+                              label = paste0(population, "\n", percent)), size = 3)+
   coord_cartesian(xlim=c(100,10000000),ylim=c(100,10000000))+
   geom_vline(xintercept=100000,linetype="dashed",linewidth = 0.3, color = "gray35")+
   geom_hline(yintercept=100000,linetype="dashed",linewidth = 0.3, color = "gray35")
