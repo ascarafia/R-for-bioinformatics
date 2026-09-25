@@ -1,0 +1,4 @@
+sample	file_name
+control	A01_neg.fcs
+MPC	A04_MPC.fcs
+PSC	A05_PSC.fcs
